@@ -592,12 +592,14 @@ class ItemViewSet(
 
         if item.type != models.ItemTypeChoices.FILE:
             raise drf.exceptions.ValidationError(
-                {"item": "This action is only available for items of type FILE."}
+                {"item": "This action is only available for items of type FILE."},
+                code="item_upload_type_unavailable",
             )
 
         if item.upload_state != models.ItemUploadStateChoices.PENDING:
             raise drf.exceptions.ValidationError(
-                {"item": "This action is only available for items in PENDING state."}
+                {"item": "This action is only available for items in PENDING state."},
+                code="item_upload_state_not_pending",
             )
 
         mime_detector = magic.Magic(mime=True)
@@ -673,11 +675,11 @@ class ItemViewSet(
             target_item = models.Item.objects.get(
                 id=target_item_id, ancestors_deleted_at__isnull=True
             )
-        except models.Item.DoesNotExist:
-            return drf.response.Response(
+        except models.Item.DoesNotExist as excpt:
+            raise drf.exceptions.ValidationError(
                 {"target_item_id": "Target parent item does not exist."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+                code="item_move_target_does_not_exist",
+            ) from excpt
 
         message = None
 
@@ -688,9 +690,8 @@ class ItemViewSet(
             )
 
         if message:
-            return drf.response.Response(
-                {"target_item_id": message},
-                status=status.HTTP_400_BAD_REQUEST,
+            raise drf.exceptions.ValidationError(
+                {"target_item_id": message}, code="item_move_missing_permission"
             )
 
         item.move(target_item)

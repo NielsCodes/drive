@@ -201,7 +201,14 @@ def test_api_items_children_list_anonymous_restricted_or_authenticated(reach):
 
     assert response.status_code == 401
     assert response.json() == {
-        "detail": "Authentication credentials were not provided."
+        "errors": [
+            {
+                "attr": None,
+                "code": "not_authenticated",
+                "detail": "Authentication credentials were not provided.",
+            },
+        ],
+        "type": "client_error",
     }
 
 
@@ -412,7 +419,14 @@ def test_api_items_children_list_authenticated_unrelated_restricted():
     )
     assert response.status_code == 403
     assert response.json() == {
-        "detail": "You do not have permission to perform this action."
+        "errors": [
+            {
+                "attr": None,
+                "code": "permission_denied",
+                "detail": "You do not have permission to perform this action.",
+            },
+        ],
+        "type": "client_error",
     }
 
 
@@ -627,7 +641,14 @@ def test_api_items_children_list_authenticated_related_child():
     )
     assert response.status_code == 403
     assert response.json() == {
-        "detail": "You do not have permission to perform this action."
+        "errors": [
+            {
+                "attr": None,
+                "code": "permission_denied",
+                "detail": "You do not have permission to perform this action.",
+            },
+        ],
+        "type": "client_error",
     }
 
 
@@ -653,7 +674,14 @@ def test_api_items_children_list_authenticated_related_team_none(mock_user_teams
     response = client.get(f"/api/v1.0/items/{item.id!s}/children/")
     assert response.status_code == 403
     assert response.json() == {
-        "detail": "You do not have permission to perform this action."
+        "errors": [
+            {
+                "attr": None,
+                "code": "permission_denied",
+                "detail": "You do not have permission to perform this action.",
+            },
+        ],
+        "type": "client_error",
     }
 
 
@@ -882,7 +910,13 @@ def test_api_items_children_list_filter_wrong_type():
         f"/api/v1.0/items/{item.id!s}/children/?type=unknown",
     )
     assert response.status_code == 400
-
     assert response.json() == {
-        "type": ["Select a valid choice. unknown is not one of the available choices."]
+        "errors": [
+            {
+                "attr": "type",
+                "code": "invalid",
+                "detail": "Select a valid choice. unknown is not one of the available choices.",
+            },
+        ],
+        "type": "validation_error",
     }
